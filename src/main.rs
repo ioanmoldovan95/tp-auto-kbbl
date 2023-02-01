@@ -58,7 +58,14 @@ fn main() {
     debug!("Config: {:?}", config);
     // Setup messaging channel and spawn input thread
     let (tx, rx) = mpsc::channel();
-    spawn_input_handle(config.device_file, tx);
+
+    let devices: [String; 3] = ["/dev/input/event3".to_string(), "/dev/input/event8".to_string(), "/dev/input/event9".to_string()];
+
+    for i in 0..devices.len() {
+        let tx1 = tx.clone();
+        let device = devices[i].clone();
+        spawn_input_handle(device, tx1);
+    }
 
     // Setup dbus
     let conn = Connection::new_system().unwrap();
@@ -104,7 +111,7 @@ fn main() {
             let es = last_event_ts.elapsed().unwrap().as_secs();
             if es >= config.timeout {
                 // Larger than timeout: Lights off
-                brightness = 0
+                brightness  = 0
             } else if config.dim
                 && config.brightness > 1
                 && current_brightness > 1
